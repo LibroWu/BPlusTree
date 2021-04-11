@@ -116,14 +116,20 @@ public:
                     root.child[num + 1] = ind.next;
                     root.Fence[num] = tmp->v[0];
                     ++root.number;
-                    //todo
                     if (root.number > M) {
                         crystalNode another, newRoot;
-                        for (int i = 0; i < halfM; ++i) {
+                        for (int i = 0; i < halfM; ++i)
                             another.child[i] = root.child[i + M / 2 + 1];
-                        }
+                        for (int i = 0; i < halfM - 1; ++i)
+                            another.Fence[i] = root.Fence[i + M / 2 + 1];
+                        newRoot.number = 2;
+                        newRoot.Fence[0] = root.Fence[M / 2];
                         another.number = halfM;
                         root.number = M / 2 + 1;
+                        newRoot.child[0]=root_pos;
+                        crystalMemory.update(root,root_pos);
+                        newRoot.child[1]=crystalMemory.write(another);
+                        crystalMemory.write_info(crystalMemory.write(newRoot),3);
                     } else crystalMemory.update(root, root_pos);
                 }
                 delete tmp;
