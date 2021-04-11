@@ -1,6 +1,6 @@
 #include <iostream>
 #include "BPT.hpp"
 int main() {
-    std::cout << "Hello, World!" << std::endl;
+    std::cout << (~-100) << std::endl;
     return 0;
 }

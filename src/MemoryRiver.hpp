@@ -21,9 +21,12 @@ private:
     string file_name;
     size_t sizeofT = sizeof(T);
 public:
+    MemoryRiver() = default;
+
     MemoryRiver(string file_name) : file_name(file_name) {}
 
-    void initialise() {
+    void initialise(string FN = "") {
+        if (FN != "") file_name = FN;
         file.open(file_name, std::ios::out);
         size_t tmp = sizeof(size_t) * info_len;
         file.write(reinterpret_cast<char *>(&tmp), sizeof(size_t));
@@ -49,11 +52,12 @@ public:
         file.close();
     }
 
-    void write(const T &t, const size_t &index) {
+    size_t write(const T &t) {
         file.open(file_name);
-        size_t pos, num;
+        size_t pos, num, r_index;
         file.seekg(0);
         file.read(reinterpret_cast<char *>(&pos), sizeof(size_t));
+        r_index = pos;
         file.read(reinterpret_cast<char *>(&num), sizeof(size_t));
         //no empty node exists
         if (!num) {
@@ -74,6 +78,7 @@ public:
             file.write(reinterpret_cast<char *>(&num), sizeof(size_t));
         }
         file.close();
+        return r_index;
     }
 
     void update(const T &t, const size_t &index) {
