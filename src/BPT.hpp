@@ -121,7 +121,19 @@ private:
                 } else crystalMemory.update(sub_root, pos);
                 delete tmp;
             }
+        } else {
+            Pair* tmp = sub_insert(t,index,sub_root.child[num]);
+            if (tmp) {
+                for (int i = 0; i < ; ++i) {
+
+                }
+                if (sub_root.number>M) {
+
+                    ptr=new Pair;
+                }
+            }
         }
+        return ptr;
     }
 
 public:
@@ -144,47 +156,14 @@ public:
             root.is_leaf = true;
             crystalMemory.write_info(crystalMemory.write(root), 3);
         } else {
-            crystalMemory.read(root, root_pos);
-            size_t num = lower_bound(root.Fence, root.Fence + root.number - 1, t) - root.Fence;
-            if (root.is_leaf) {
-                indexNode ind;
-                indexMemory.read(ind, root.child[num]);
-                indexNode *tmp = ind.insert(t, index);
-                if (tmp == nullptr)
-                    indexMemory.update(ind, root.child[num]);
-                else {
-                    ind.next = indexMemory.write(*tmp);
-                    indexMemory.update(ind, root.child[num]);
-                    for (int i = root.number; i > num + 1; --i) {
-                        root.child[i] = root.child[i - 1];
-                        root.Fence[i - 1] = root.Fence[i - 2];
-                    }
-                    root.child[num + 1] = ind.next;
-                    root.Fence[num] = tmp->v[0];
-                    ++root.number;
-                    //the root splits
-                    if (root.number > M) {
-                        crystalNode another, newRoot;
-                        for (int i = 0; i < halfM; ++i)
-                            another.child[i] = root.child[i + M / 2 + 1];
-                        for (int i = 0; i < halfM - 1; ++i)
-                            another.Fence[i] = root.Fence[i + M / 2 + 1];
-                        newRoot.number = 2;
-                        newRoot.Fence[0] = root.Fence[M / 2];
-                        another.number = halfM;
-                        root.number = M / 2 + 1;
-                        newRoot.child[0] = root_pos;
-                        newRoot.is_leaf = false;
-                        root.is_leaf = true;
-                        another.is_leaf = true;
-                        crystalMemory.update(root, root_pos);
-                        newRoot.child[1] = crystalMemory.write(another);
-                        crystalMemory.write_info(crystalMemory.write(newRoot), 3);
-                    } else crystalMemory.update(root, root_pos);
-                }
-                delete tmp;
-            } else {
-                Pair *tmp = sub_insert(t, index, root.child[num]);
+            Pair *tmp = sub_insert(t, index, root_pos);
+            if (tmp) {
+                crystalNode newRoot;
+                newRoot.child[0] = root_pos;
+                newRoot.child[1] = tmp->pos;
+                newRoot.Fence[0] = tmp->t;
+                newRoot.number=2;
+                crystalMemory.write_info(crystalMemory.write(newRoot),3);
                 delete tmp;
             }
         }
