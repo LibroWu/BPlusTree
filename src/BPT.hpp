@@ -23,7 +23,7 @@ using std::lower_bound;
 
 //do not support duplicate key
 //if wanting to support,make the chain doubly linked
-template<class T, int M, int L, class Compare=std::less<T>>
+template<class T,class U, int M, int L, class Compare=std::less<T>>
 class BPT {
 private:
 #define halfM (M-M/2)
@@ -36,7 +36,7 @@ private:
         bool is_leaf;
         int number;
         T Fence[M + 1];
-        int child[M + 2];
+        U child[M + 2];
 
         crystalNode() : number(0), is_leaf(0) {}
 
@@ -61,12 +61,12 @@ private:
     public:
         int next, pre, number;
         T v[L + 1];
-        int index[L + 1];
+        U index[L + 1];
 
         indexNode() : number(0), next(0), pre(0) {}
 
         //not nullptr if split
-        indexNode *insert(const T &t, const int &ind) {
+        indexNode *insert(const T &t, const U &ind) {
             int pos = lower_bound(v, v + number, t) - v;
             for (int i = number; i > pos; --i) {
                 v[i] = v[i - 1];
@@ -114,10 +114,10 @@ private:
 
     struct Pair {
         T t;
-        int pos;
+        U pos;
     };
 
-    Pair *sub_insert(const T &t, const int &index, const int &pos) {
+    Pair *sub_insert(const T &t, const U &index, const int &pos) {
         Pair *ptr = nullptr;
         crystalNode sub_root;
         crystalMemory.read(sub_root, pos);
@@ -198,7 +198,7 @@ public:
         indexMemory.initialise(indexFN);
     }
 
-    void insert(const T &t, const int &index) {
+    void insert(const T &t, const U &index) {
         int root_pos;
         crystalMemory.get_info(root_pos, 3);
         crystalNode root;
@@ -228,7 +228,7 @@ public:
 
     }
 
-    int Find(const T &t) {
+    U Find(const T &t) {
         int pos, num;
         crystalMemory.get_info(pos, 3);
         crystalNode tmp;
