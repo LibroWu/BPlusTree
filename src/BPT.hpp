@@ -55,7 +55,6 @@ private:
                 //todo have a bug here, reach L
                 //todo if reserve an empty storage in the end, then the coding would be much more enjoyable
                 //todo I choose to enjoy the coding
-                //todo why do I tag todo? Because of the highlight.
                 newInd = new indexNode;
                 for (size_t i = 0; i < halfL; ++i) {
                     newInd->index[i] = index[i + L / 2 + 1];
@@ -102,35 +101,51 @@ private:
                 ++sub_root.number;
                 //the sub_root splits
                 if (sub_root.number > M) {
-                    crystalNode another, newRoot;
+                    crystalNode another, n;
                     for (int i = 0; i < halfM; ++i)
                         another.child[i] = sub_root.child[i + M / 2 + 1];
                     for (int i = 0; i < halfM - 1; ++i)
                         another.Fence[i] = sub_root.Fence[i + M / 2 + 1];
-                    newRoot.number = 2;
-                    newRoot.Fence[0] = sub_root.Fence[M / 2];
+                    ptr=new Pair;
+                    ptr->t=sub_root.Fence[M / 2];
                     another.number = halfM;
                     sub_root.number = M / 2 + 1;
-                    newRoot.child[0] = pos;
-                    newRoot.is_leaf = false;
                     sub_root.is_leaf = true;
                     another.is_leaf = true;
                     crystalMemory.update(sub_root, pos);
-                    newRoot.child[1] = crystalMemory.write(another);
-                    crystalMemory.write_info(crystalMemory.write(newRoot), 3);
-                } else crystalMemory.update(sub_root, pos);
+                    ptr->pos = crystalMemory.write(another);
+                }
+                else crystalMemory.update(sub_root, pos);
                 delete tmp;
             }
-        } else {
-            Pair* tmp = sub_insert(t,index,sub_root.child[num]);
+        }
+        else {
+            Pair *tmp = sub_insert(t, index, sub_root.child[num]);
             if (tmp) {
-                for (int i = 0; i < ; ++i) {
-
+                for (int i = sub_root.number; i >num+1; --i) {
+                    sub_root.child[i]=sub_root.child[i-1];
+                    sub_root.Fence[i-1]=sub_root.Fence[i-2];
                 }
-                if (sub_root.number>M) {
-
+                sub_root.Fence[num]=tmp->t;
+                sub_root.child[num+1]=tmp->pos;
+                if (sub_root.number > M) {
+                    crystalNode another, n;
+                    for (int i = 0; i < halfM; ++i)
+                        another.child[i] = sub_root.child[i + M / 2 + 1];
+                    for (int i = 0; i < halfM - 1; ++i)
+                        another.Fence[i] = sub_root.Fence[i + M / 2 + 1];
                     ptr=new Pair;
+                    ptr->t=sub_root.Fence[M / 2];
+                    another.number = halfM;
+                    sub_root.number = M / 2 + 1;
+                    sub_root.is_leaf = false;
+                    another.is_leaf = false;
+                    crystalMemory.update(sub_root, pos);
+                    ptr->pos = crystalMemory.write(another);
+                    ptr = new Pair;
                 }
+                else crystalMemory.update(sub_root,pos);
+                delete tmp;
             }
         }
         return ptr;
@@ -155,15 +170,16 @@ public:
             root.child[root.number++] = indexMemory.write(Beg);
             root.is_leaf = true;
             crystalMemory.write_info(crystalMemory.write(root), 3);
-        } else {
+        }
+        else {
             Pair *tmp = sub_insert(t, index, root_pos);
             if (tmp) {
                 crystalNode newRoot;
                 newRoot.child[0] = root_pos;
                 newRoot.child[1] = tmp->pos;
                 newRoot.Fence[0] = tmp->t;
-                newRoot.number=2;
-                crystalMemory.write_info(crystalMemory.write(newRoot),3);
+                newRoot.number = 2;
+                crystalMemory.write_info(crystalMemory.write(newRoot), 3);
                 delete tmp;
             }
         }
