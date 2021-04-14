@@ -26,8 +26,8 @@ private:
     public:
         bool is_leaf;
         size_t number;
-        T Fence[M];
-        size_t child[M + 1];
+        T Fence[M + 1];
+        size_t child[M + 2];
 
         crystalNode() : number(0), is_leaf(0) {}
     };
@@ -38,7 +38,7 @@ private:
         T v[L + 1];
         size_t index[L + 1];
 
-        indexNode() : next(0), pre(0) {}
+        indexNode() : number(0), next(0), pre(0) {}
 
         //not nullptr if split
         indexNode *insert(const T &t, const size_t &ind) {
@@ -73,6 +73,8 @@ private:
     MemoryRiver<crystalNode, 3> crystalMemory;
     MemoryRiver<indexNode, 2> indexMemory;
 
+    Compare cmp;
+
     struct Pair {
         T t;
         size_t pos;
@@ -100,15 +102,15 @@ private:
                 sub_root.Fence[num] = tmp->v[0];
                 ++sub_root.number;
                 //the sub_root splits
-                if (sub_root.number > M) {
+                if (sub_root.number > M + 1) {
                     crystalNode another, n;
-                    for (int i = 0; i < halfM; ++i)
+                    for (int i = 0; i < halfM + 1; ++i)
                         another.child[i] = sub_root.child[i + M / 2 + 1];
-                    for (int i = 0; i < halfM - 1; ++i)
+                    for (int i = 0; i < halfM; ++i)
                         another.Fence[i] = sub_root.Fence[i + M / 2 + 1];
-                    ptr=new Pair;
-                    ptr->t=sub_root.Fence[M / 2];
-                    another.number = halfM;
+                    ptr = new Pair;
+                    ptr->t = sub_root.Fence[M / 2];
+                    another.number = halfM + 1;
                     sub_root.number = M / 2 + 1;
                     sub_root.is_leaf = true;
                     another.is_leaf = true;
@@ -122,21 +124,22 @@ private:
         else {
             Pair *tmp = sub_insert(t, index, sub_root.child[num]);
             if (tmp) {
-                for (int i = sub_root.number; i >num+1; --i) {
-                    sub_root.child[i]=sub_root.child[i-1];
-                    sub_root.Fence[i-1]=sub_root.Fence[i-2];
+                for (int i = sub_root.number; i > num + 1; --i) {
+                    sub_root.child[i] = sub_root.child[i - 1];
+                    sub_root.Fence[i - 1] = sub_root.Fence[i - 2];
                 }
-                sub_root.Fence[num]=tmp->t;
-                sub_root.child[num+1]=tmp->pos;
-                if (sub_root.number > M) {
+                sub_root.Fence[num] = tmp->t;
+                sub_root.child[num + 1] = tmp->pos;
+                sub_root.number++;
+                if (sub_root.number > M + 1) {
                     crystalNode another, n;
-                    for (int i = 0; i < halfM; ++i)
+                    for (int i = 0; i < halfM + 1; ++i)
                         another.child[i] = sub_root.child[i + M / 2 + 1];
-                    for (int i = 0; i < halfM - 1; ++i)
+                    for (int i = 0; i < halfM; ++i)
                         another.Fence[i] = sub_root.Fence[i + M / 2 + 1];
-                    ptr=new Pair;
-                    ptr->t=sub_root.Fence[M / 2];
-                    another.number = halfM;
+                    ptr = new Pair;
+                    ptr->t = sub_root.Fence[M / 2];
+                    another.number = halfM + 1;
                     sub_root.number = M / 2 + 1;
                     sub_root.is_leaf = false;
                     another.is_leaf = false;
@@ -144,7 +147,7 @@ private:
                     ptr->pos = crystalMemory.write(another);
                     ptr = new Pair;
                 }
-                else crystalMemory.update(sub_root,pos);
+                else crystalMemory.update(sub_root, pos);
                 delete tmp;
             }
         }
@@ -161,7 +164,7 @@ public:
 
     void insert(const T &t, const size_t &index) {
         size_t root_pos;
-        indexMemory.get_info(root_pos, 3);
+        crystalMemory.get_info(root_pos, 3);
         crystalNode root;
         if (root_pos == 0) {
             indexNode Beg;
@@ -189,8 +192,23 @@ public:
 
     }
 
-    std::vector<size_t> *Find(const T &t) {
-
+    size_t Find(const T &t) {
+        size_t pos, num;
+        crystalMemory.get_info(pos, 3);
+        crystalNode tmp;
+        while (pos > 0) {
+            crystalMemory.read(tmp, pos);
+            num = lower_bound(tmp.Fence, tmp.Fence + tmp.number - 1, t) - tmp.Fence;
+            if (tmp.is_leaf) {
+                indexNode ind;
+                indexMemory.read(ind, tmp.child[num]);
+                size_t N = lower_bound(ind.v, ind.v + ind.number, t) - ind.v;
+                if (ind.v[N] == t) return ind.index[N];
+                //not found
+                return 0;
+            }
+            pos = tmp.child[num];
+        }
     }
 };
 

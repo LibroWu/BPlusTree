@@ -52,7 +52,7 @@ public:
         file.close();
     }
 
-    size_t write(const T &t) {
+    size_t write(T &t) {
         file.open(file_name);
         size_t pos, num, r_index;
         file.seekg(0);
@@ -81,7 +81,7 @@ public:
         return r_index;
     }
 
-    void update(const T &t, const size_t &index) {
+    void update(T &t, const size_t &index) {
         file.open(file_name);
         file.seekp(index + sizeof(size_t));
         file.write(reinterpret_cast<char *>(&t), sizeofT);
