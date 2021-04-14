@@ -14,12 +14,12 @@ using std::ofstream;
 
 //the first info is for the head of empty node chain
 //the second info is for the number of empty node in the chain
-template<class T, size_t info_len = 2>
+template<class T, unsigned int info_len = 2>
 class MemoryRiver {
 private:
     fstream file;
     string file_name;
-    size_t sizeofT = sizeof(T);
+    unsigned int sizeofT = sizeof(T);
 public:
     MemoryRiver() = default;
 
@@ -28,84 +28,84 @@ public:
     void initialise(string FN = "") {
         if (FN != "") file_name = FN;
         file.open(file_name, std::ios::out);
-        size_t tmp = sizeof(size_t) * info_len;
-        file.write(reinterpret_cast<char *>(&tmp), sizeof(size_t));
+        unsigned int tmp = sizeof(unsigned int) * info_len;
+        file.write(reinterpret_cast<char *>(&tmp), sizeof(unsigned int));
         tmp = 0;
         for (int i = 1; i < info_len; ++i)
-            file.write(reinterpret_cast<char *>(&tmp), sizeof(size_t));
+            file.write(reinterpret_cast<char *>(&tmp), sizeof(unsigned int));
         file.close();
     }
 
-    void get_info(size_t &tmp, size_t n) {
+    void get_info(unsigned int &tmp, unsigned int n) {
         if (n > info_len) return;
         file.open(file_name);
-        file.seekg(sizeof(size_t) * (n - 1));
-        file.read(reinterpret_cast<char *>(&tmp), sizeof(size_t));
+        file.seekg(sizeof(unsigned int) * (n - 1));
+        file.read(reinterpret_cast<char *>(&tmp), sizeof(unsigned int));
         file.close();
     }
 
-    void write_info(size_t tmp, size_t n) {
+    void write_info(unsigned int tmp, unsigned int n) {
         if (n > info_len) return;
         file.open(file_name);
-        file.seekp(sizeof(size_t) * (n - 1));
-        file.write(reinterpret_cast<char *>(&tmp), sizeof(size_t));
+        file.seekp(sizeof(unsigned int) * (n - 1));
+        file.write(reinterpret_cast<char *>(&tmp), sizeof(unsigned int));
         file.close();
     }
 
-    size_t write(T &t) {
+    unsigned int write(T &t) {
         file.open(file_name);
-        size_t pos, num, r_index;
+        unsigned int pos, num, r_index;
         file.seekg(0);
-        file.read(reinterpret_cast<char *>(&pos), sizeof(size_t));
+        file.read(reinterpret_cast<char *>(&pos), sizeof(unsigned int));
         r_index = pos;
-        file.read(reinterpret_cast<char *>(&num), sizeof(size_t));
+        file.read(reinterpret_cast<char *>(&num), sizeof(unsigned int));
         //no empty node exists
         if (!num) {
             file.seekp(0);
-            pos += sizeofT + sizeof(size_t);
-            file.write(reinterpret_cast<char *>(&pos), sizeof(size_t));
-            file.seekp(pos - sizeofT - sizeof(size_t));
-            file.write(reinterpret_cast<char *>(&num), sizeof(size_t));
+            pos += sizeofT + sizeof(unsigned int);
+            file.write(reinterpret_cast<char *>(&pos), sizeof(unsigned int));
+            file.seekp(pos - sizeofT - sizeof(unsigned int));
+            file.write(reinterpret_cast<char *>(&num), sizeof(unsigned int));
             file.write(reinterpret_cast<char *>(&t), sizeofT);
         }
         else {
             --num;
             file.seekp(pos);
-            file.read(reinterpret_cast<char *>(&pos), sizeof(size_t));
+            file.read(reinterpret_cast<char *>(&pos), sizeof(unsigned int));
             file.write(reinterpret_cast<char *>(&t), sizeofT);
             file.seekp(0);
-            file.write(reinterpret_cast<char *>(&pos), sizeof(size_t));
-            file.write(reinterpret_cast<char *>(&num), sizeof(size_t));
+            file.write(reinterpret_cast<char *>(&pos), sizeof(unsigned int));
+            file.write(reinterpret_cast<char *>(&num), sizeof(unsigned int));
         }
         file.close();
         return r_index;
     }
 
-    void update(T &t, const size_t &index) {
+    void update(T &t, const unsigned int &index) {
         file.open(file_name);
-        file.seekp(index + sizeof(size_t));
+        file.seekp(index + sizeof(unsigned int));
         file.write(reinterpret_cast<char *>(&t), sizeofT);
         file.close();
     }
 
-    void read(T &t, const size_t &index) {
+    void read(T &t, const unsigned int &index) {
         file.open(file_name);
-        file.seekg(index + sizeof(size_t));
+        file.seekg(index + sizeof(unsigned int));
         file.read(reinterpret_cast<char *>(&t), sizeofT);
         file.close();
     }
 
-    void Delete(size_t index) {
-        size_t a, num;
+    void Delete(unsigned int index) {
+        unsigned int a, num;
         file.open(file_name);
-        file.read(reinterpret_cast<char *>(&a), sizeof(size_t));
-        file.read(reinterpret_cast<char *>(&num), sizeof(size_t));
+        file.read(reinterpret_cast<char *>(&a), sizeof(unsigned int));
+        file.read(reinterpret_cast<char *>(&num), sizeof(unsigned int));
         ++num;
         file.seekg(index);
-        file.write(reinterpret_cast<char *>(&a), sizeof(size_t));
+        file.write(reinterpret_cast<char *>(&a), sizeof(unsigned int));
         file.seekp(0);
-        file.write(reinterpret_cast<char *>(&index), sizeof(size_t));
-        file.write(reinterpret_cast<char *>(&num), sizeof(size_t));
+        file.write(reinterpret_cast<char *>(&index), sizeof(unsigned int));
+        file.write(reinterpret_cast<char *>(&num), sizeof(unsigned int));
         file.close();
     }
 };

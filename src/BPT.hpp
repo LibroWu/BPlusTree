@@ -14,7 +14,7 @@ using std::lower_bound;
 
 //do not support duplicate key
 //if wanting to support,make the chain doubly linked
-template<class T, size_t M, size_t L, class Compare=std::less<T>>
+template<class T, unsigned int M, unsigned int L, class Compare=std::less<T>>
 class BPT {
 private:
 #define halfM (M-M/2)
@@ -25,25 +25,25 @@ private:
     class crystalNode {
     public:
         bool is_leaf;
-        size_t number;
+        unsigned int number;
         T Fence[M + 1];
-        size_t child[M + 2];
+        unsigned int child[M + 2];
 
         crystalNode() : number(0), is_leaf(0) {}
     };
 
     class indexNode {
     public:
-        size_t next, pre, number;
+        unsigned int next, pre, number;
         T v[L + 1];
-        size_t index[L + 1];
+        unsigned int index[L + 1];
 
         indexNode() : number(0), next(0), pre(0) {}
 
         //not nullptr if split
-        indexNode *insert(const T &t, const size_t &ind) {
-            size_t pos = lower_bound(v, v + number, t) - v;
-            for (size_t i = number; i > pos; --i) {
+        indexNode *insert(const T &t, const unsigned int &ind) {
+            unsigned int pos = lower_bound(v, v + number, t) - v;
+            for (unsigned int i = number; i > pos; --i) {
                 v[i] = v[i - 1];
                 index[i] = index[i - 1];
             }
@@ -56,7 +56,7 @@ private:
                 //todo if reserve an empty storage in the end, then the coding would be much more enjoyable
                 //todo I choose to enjoy the coding
                 newInd = new indexNode;
-                for (size_t i = 0; i < halfL; ++i) {
+                for (unsigned int i = 0; i < halfL; ++i) {
                     newInd->index[i] = index[i + L / 2 + 1];
                     newInd->v[i] = v[i + L / 2 + 1];
                 }
@@ -77,14 +77,14 @@ private:
 
     struct Pair {
         T t;
-        size_t pos;
+        unsigned int pos;
     };
 
-    Pair *sub_insert(const T &t, const size_t &index, const size_t &pos) {
+    Pair *sub_insert(const T &t, const unsigned int &index, const unsigned int &pos) {
         Pair *ptr = nullptr;
         crystalNode sub_root;
         crystalMemory.read(sub_root, pos);
-        size_t num = lower_bound(sub_root.Fence, sub_root.Fence + sub_root.number - 1, t) - sub_root.Fence;
+        unsigned int num = lower_bound(sub_root.Fence, sub_root.Fence + sub_root.number - 1, t) - sub_root.Fence;
         if (sub_root.is_leaf) {
             indexNode ind;
             indexMemory.read(ind, sub_root.child[num]);
@@ -162,8 +162,8 @@ public:
         indexMemory.initialise(indexFN);
     }
 
-    void insert(const T &t, const size_t &index) {
-        size_t root_pos;
+    void insert(const T &t, const unsigned int &index) {
+        unsigned int root_pos;
         crystalMemory.get_info(root_pos, 3);
         crystalNode root;
         if (root_pos == 0) {
@@ -192,8 +192,8 @@ public:
 
     }
 
-    size_t Find(const T &t) {
-        size_t pos, num;
+    unsigned int Find(const T &t) {
+        unsigned int pos, num;
         crystalMemory.get_info(pos, 3);
         crystalNode tmp;
         while (pos > 0) {
@@ -202,13 +202,14 @@ public:
             if (tmp.is_leaf) {
                 indexNode ind;
                 indexMemory.read(ind, tmp.child[num]);
-                size_t N = lower_bound(ind.v, ind.v + ind.number, t) - ind.v;
+                unsigned int N = lower_bound(ind.v, ind.v + ind.number, t) - ind.v;
                 if (ind.v[N] == t) return ind.index[N];
                 //not found
                 return 0;
             }
             pos = tmp.child[num];
         }
+        return 0;
     }
 };
 
