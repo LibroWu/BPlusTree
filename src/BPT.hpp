@@ -20,7 +20,7 @@ using std::cout;
 #include <algorithm>
 
 using std::lower_bound;
-
+using std::upper_bound;
 //do not support duplicate key
 //if wanting to support,make the chain doubly linked
 template<class T, class U, int M, int L, class Compare=std::less<T>>
@@ -203,7 +203,7 @@ private:
     crystalNode *sub_Delete(const T &t, int pos) {
         crystalNode *ptr = new crystalNode;
         crystalMemory.read(*ptr, pos);
-        int num = lower_bound(ptr->Fence, ptr->Fence + ptr->number - 1, t) - ptr->Fence;
+        int num = upper_bound(ptr->Fence, ptr->Fence + ptr->number - 1, t) - ptr->Fence;
         if (ptr->is_leaf) {
             indexNode ind;
             indexMemory.read(ind, ptr->child[num]);
@@ -272,7 +272,7 @@ private:
                 }
                 if (ptr->number - 1 < halfM) return ptr;
                 crystalMemory.update(*ptr, pos);
-            }
+            } else indexMemory.update(ind, ptr->child[num]);
         } else {
             crystalNode *sub_ptr = sub_Delete(t, ptr->child[num]);
             if (sub_ptr) {
@@ -387,9 +387,11 @@ public:
         crystalMemory.get_info(root_pos, 3);
         if (root_pos) {
             crystalNode *tmp = sub_Delete(t, root_pos);
-            if (tmp->number == 0) {
-                crystalMemory.Delete(root_pos);
-                crystalMemory.write_info(tmp->child[0], 3);
+            if (tmp) {
+                if (tmp->number==1) {
+                    crystalMemory.Delete(root_pos);
+                    crystalMemory.write_info(tmp->child[0], 3);
+                } else crystalMemory.update(*tmp,root_pos);
             }
             delete tmp;
         }
@@ -401,7 +403,7 @@ public:
         crystalNode tmp;
         while (pos > 0) {
             crystalMemory.read(tmp, pos);
-            num = lower_bound(tmp.Fence, tmp.Fence + tmp.number - 1, t) - tmp.Fence;
+            num = upper_bound(tmp.Fence, tmp.Fence + tmp.number - 1, t) - tmp.Fence;
             if (tmp.is_leaf) {
                 indexNode ind;
                 indexMemory.read(ind, tmp.child[num]);
