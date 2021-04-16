@@ -429,10 +429,12 @@ public:
             if (flag[l - 1]) {
                 indexNode t;
                 indexMemory.read(t, pos);
+                cout<<"----"<<pos<<"----";
                 t.print();
                 cout << '\n';
             } else {
                 crystalNode t;
+                cout<<"----"<<pos<<"----";
                 crystalMemory.read(t, pos);
                 t.print();
                 cout << '\n';
