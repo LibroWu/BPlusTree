@@ -23,7 +23,7 @@ private:
 public:
     MemoryRiver() = default;
 
-    MemoryRiver(string file_name) : file_name(file_name) {}
+    MemoryRiver(const string& file_name) : file_name(file_name) {}
 
     void initialise(string FN = "") {
         if (FN != "") file_name = FN;

@@ -21,6 +21,7 @@ using std::cout;
 
 using std::lower_bound;
 using std::upper_bound;
+
 //do not support duplicate key
 //if wanting to support,make the chain doubly linked
 template<class T, class U, int M, int L, class Compare=std::less<T>>
@@ -208,7 +209,7 @@ private:
             indexNode ind;
             indexMemory.read(ind, ptr->child[num]);
             if (ind.Delete(t)) {
-                bool flag = true;
+                bool flag = true, flag2 = false;
                 if (num) {
                     indexNode lind;
                     indexMemory.read(lind, ptr->child[num - 1]);
@@ -221,6 +222,7 @@ private:
                         ind.v[0] = lind.v[--lind.number];
                         ind.index[0] = lind.index[lind.number];
                         ptr->Fence[num - 1] = ind.v[0];
+                        flag2 = true;
                         indexMemory.update(ind, ptr->child[num]);
                         indexMemory.update(lind, ptr->child[num - 1]);
                     }//merge with left index node
@@ -229,6 +231,7 @@ private:
                             lind.v[i + lind.number] = ind.v[i];
                             lind.index[i + lind.number] = ind.index[i];
                         }
+                        lind.next = ind.next;
                         lind.number += ind.number;
                         indexMemory.Delete(ptr->child[num]);
                         for (int i = num; i < ptr->number; ++i) {
@@ -236,6 +239,7 @@ private:
                             ptr->Fence[i - 1] = ptr->Fence[i];
                         }
                         --ptr->number;
+                        flag2 = true;
                         indexMemory.update(lind, ptr->child[num - 1]);
                     } //problem has not been solved
                     else flag = false;
@@ -252,6 +256,7 @@ private:
                             rind.index[i] = rind.index[i + 1];
                         }
                         ptr->Fence[num] = rind.v[0];
+                        flag2 = true;
                         indexMemory.update(ind, ptr->child[num]);
                         indexMemory.update(rind, ptr->child[num + 1]);
                     }//merge with right index node
@@ -260,6 +265,7 @@ private:
                             ind.v[i + ind.number] = rind.v[i];
                             ind.index[i + ind.number] = rind.index[i];
                         }
+                        ind.next = rind.next;
                         ind.number += rind.number;
                         indexMemory.Delete(ptr->child[num + 1]);
                         for (int i = num + 1; i < ptr->number; ++i) {
@@ -267,8 +273,14 @@ private:
                             ptr->Fence[i - 1] = ptr->Fence[i];
                         }
                         --ptr->number;
+                        flag2 = true;
                         indexMemory.update(ind, ptr->child[num]);
                     }
+                }
+                if (!flag2) indexMemory.update(ind, ptr->child[num]);
+                if (ind.number == 0) {
+                    indexMemory.Delete(ptr->child[num]);
+                    --ptr->number;
                 }
                 if (ptr->number - 1 < halfM) return ptr;
                 crystalMemory.update(*ptr, pos);
@@ -276,7 +288,7 @@ private:
         } else {
             crystalNode *sub_ptr = sub_Delete(t, ptr->child[num]);
             if (sub_ptr) {
-                bool flag = true;
+                bool flag = true, flag2 = false;
                 if (num) {
                     crystalNode l_crystal;
                     crystalMemory.read(l_crystal, ptr->child[num - 1]);
@@ -290,6 +302,7 @@ private:
                         sub_ptr->child[0] = l_crystal.child[--l_crystal.number];
                         sub_ptr->Fence[0] = ptr->Fence[num - 1];
                         ptr->Fence[num - 1] = l_crystal.Fence[l_crystal.number - 1];
+                        flag2 = true;
                         crystalMemory.update(*sub_ptr, ptr->child[num]);
                         crystalMemory.update(l_crystal, ptr->child[num - 1]);
                     } //merge with left crystal node
@@ -306,6 +319,7 @@ private:
                             ptr->Fence[i - 1] = ptr->Fence[i];
                         }
                         --ptr->number;
+                        flag2 = true;
                         crystalMemory.update(l_crystal, ptr->child[num - 1]);
                     }//problem has not been solved
                     else flag = false;
@@ -322,6 +336,7 @@ private:
                             r_crystal.Fence[i] = r_crystal.Fence[i + 1];
                             r_crystal.child[i] = r_crystal.child[i + 1];
                         }
+                        flag2 = true;
                         crystalMemory.update(*sub_ptr, ptr->child[num]);
                         crystalMemory.update(r_crystal, ptr->child[num + 1]);
                     } //merge with right crystal node
@@ -338,9 +353,11 @@ private:
                             ptr->Fence[i - 1] = ptr->Fence[i];
                         }
                         --ptr->number;
+                        flag2 = true;
                         crystalMemory.update(*sub_ptr, ptr->child[num]);
                     }
                 }
+                if (!flag2) crystalMemory.update(*sub_ptr, ptr->child[num]);
                 if (ptr->number - 1 < halfM) return ptr;
                 crystalMemory.update(*ptr, pos);
             }
@@ -350,11 +367,18 @@ private:
     }
 
 public:
-    BPT() {}
+    BPT() = default;
+
+    BPT(const string &crystalFN, const string &indexFN) : crystalMemory(crystalFN), indexMemory(indexFN) {}
 
     void initialise(const string &crystalFN, const string &indexFN) {
         crystalMemory.initialise(crystalFN);
         indexMemory.initialise(indexFN);
+    }
+
+    void initialise() {
+        crystalMemory.initialise();
+        indexMemory.initialise();
     }
 
     void insert(const T &t, const U &index) {
@@ -388,10 +412,15 @@ public:
         if (root_pos) {
             crystalNode *tmp = sub_Delete(t, root_pos);
             if (tmp) {
-                if (tmp->number==1) {
+                if (tmp->number == 0) {
                     crystalMemory.Delete(root_pos);
-                    crystalMemory.write_info(tmp->child[0], 3);
-                } else crystalMemory.update(*tmp,root_pos);
+                    if (!tmp->is_leaf)
+                        crystalMemory.write_info(tmp->child[0], 3);
+                    else {
+                        crystalMemory.Delete(root_pos);
+                        crystalMemory.write_info(0, 3);
+                    }
+                } else crystalMemory.update(*tmp, root_pos);
             }
             delete tmp;
         }
@@ -423,18 +452,19 @@ public:
         int l = 0, r = 0, que[10000];
         bool flag[10000] = {0};
         crystalMemory.get_info(que[r++], 3);
+        if (que[0] == 0) return;
         int pos;
         while (l < r) {
             pos = que[l++];
             if (flag[l - 1]) {
                 indexNode t;
                 indexMemory.read(t, pos);
-                cout<<"----"<<pos<<"----";
+                cout << "----" << pos << "----";
                 t.print();
                 cout << '\n';
             } else {
                 crystalNode t;
-                cout<<"----"<<pos<<"----";
+                cout << "----" << pos << "----";
                 crystalMemory.read(t, pos);
                 t.print();
                 cout << '\n';
