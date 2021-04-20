@@ -371,6 +371,11 @@ public:
 
     BPT(const string &crystalFN, const string &indexFN) : crystalMemory(crystalFN), indexMemory(indexFN) {}
 
+    void Clear(){
+        crystalMemory.initialise();
+        indexMemory.initialise();
+    }
+
     void initialise(const string &crystalFN, const string &indexFN) {
         crystalMemory.initialise(crystalFN);
         indexMemory.initialise(indexFN);
