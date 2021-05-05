@@ -542,6 +542,26 @@ public:
             }
         }
     }
+    
+    void printChain(){
+        int pos, num;
+        crystalMemory.get_info(pos, 3);
+        crystalNode tmp;
+        while (pos > 0) {
+            crystalMemory.read(tmp, pos);
+            if (tmp.is_leaf) {
+                indexNode ind;
+                int indPos=tmp.child[0];
+                while (indPos){
+                    indexMemory.read(ind, indPos);
+                    ind.print();
+                    cout<<"\n";
+                    indPos=ind.next;
+                }
+            }
+            pos = tmp.child[0];
+        }
+    }
 
 #endif
 };
